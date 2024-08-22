@@ -1,56 +1,31 @@
-from flask import Flask, request, jsonify, abort
-from msal import ConfidentialClientApplication
-from functools import wraps
+from flask import Flask, jsonify
+from flask_azure_oauth import FlaskAzureOauth
 
-def create_app():
-    app = Flask(__name__)
+app = Flask(__name__)
 
-    # Configuración de MSAL
-    CLIENT_ID = "TU_CLIENT_ID"  # Reemplaza con tu client ID
-    CLIENT_SECRET = "TU_CLIENT_SECRET"  # Reemplaza con tu client secret
-    AUTHORITY = "https://login.microsoftonline.com/TU_TENANT_ID"  # Reemplaza con tu tenant ID
-    SCOPE = ["api://<YOUR_API_CLIENT_ID>/user.read"]  # Reemplaza con el scope de tu API
+# Configuración de Azure AD
+app.config['AZURE_OAUTH_TENANCY'] = 'tu-tenant-id'
+app.config['AZURE_OAUTH_APPLICATION_ID'] = 'tu-application-id'
 
-    msal_app = ConfidentialClientApplication(
-        CLIENT_ID, authority=AUTHORITY,
-        client_credential=CLIENT_SECRET
-    )
+# Inicializa Flask-Azure-OAuth
+auth = FlaskAzureOauth()
+auth.init_app(app)
 
-    # Middleware para validar el token en cada solicitud
-    def token_required(f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            token = request.headers.get('Authorization')
-            if not token:
-                abort(401, "Missing token")
-            
-            token = token.split(" ")[1]  # Extraer el token del encabezado Bearer
-            if not validate_token_with_msal(token):
-                abort(401, "Invalid or expired token")
-            
-            return f(*args, **kwargs)
-        return decorated
+@app.route('/unprotected')
+def unprotected():
+    return 'Esta es una ruta sin protección.'
 
-    # Función para validar el token utilizando MSAL
-    def validate_token_with_msal(token):
-        # Validar el token utilizando MSAL
-        result = msal_app.acquire_token_for_client(scopes=SCOPE)
-        if result and "access_token" in result:
-            # MSAL no verifica el token del usuario directamente con este método,
-            # en lugar de eso, puedes usar `acquire_token_silent` o `acquire_token_by_authorization_code` según el flujo.
-            return True
-        else:
-            return False
+@app.route('/protected')
+@auth()
+def protected():
+    return 'Esta es una ruta protegida, solo usuarios autenticados pueden acceder.'
 
-    # Definiciones de rutas protegidas
-    @app.route("/users/me", methods=["GET"])
-    @token_required
-    def get_user_info():
-        # Si el token es válido, esta ruta será accesible
-        return jsonify({"message": "Tienes acceso a los datos protegidos"})
+@app.route('/protected-with-single-scope')
+@auth('required-scope')
+def protected_with_scope():
+    return 'Esta es una ruta protegida con un scope específico.'
 
-    return app
-
-if __name__ == "__main__":
-    app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+@app.route('/protected-with-multiple-scopes')
+@auth('scope1 scope2')
+def protected_with_multiple_scopes():
+    return 'Esta es una ruta protegida que requiere múltiples scopes.'

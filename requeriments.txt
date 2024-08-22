@@ -1,4 +1,4 @@
-Flask==3.0.3
+Flask==2.3.3
 Flask-SocketIO==5.3.6
 gunicorn==23.0.0
 waitress==3.0.0
@@ -8,3 +8,5 @@ numpy==2.1.0
 requests==2.32.3
 python-multipart==0.0.9
 msal==1.30.0
+flask-azure-oauth==0.7.0
+python-jose
