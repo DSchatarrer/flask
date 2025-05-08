@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Predicción de Imagen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color: #f7f7f7;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            margin: 0.5rem 0 1rem;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #drop-area {
+            border: 2px dashed #0056b3;
+            padding: 2rem;
+            text-align: center;
+            background-color: #eef5ff;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            color: #333;
+            transition: background-color 0.3s;
+        }
+
+        #drop-area.dragover {
+            background-color: #d6e6ff;
+        }
+
+        button {
+            padding: 0.6rem 1.2rem;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #004099;
+        }
+
+        .result {
+            background: #e9ffe9;
+            border: 1px solid #b3ffb3;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+        }
+
+        .image-gallery {
+            display: flex;
+            gap: 2rem;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .image-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .image-box h3 {
+            margin-bottom: 1rem;
+            color: #444;
+        }
+
+        .image-box img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .download {
+            margin-top: 1rem;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            z-index: 9998;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .loader {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #0056b3;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            z-index: 9999;
+        }
+
+        .loader-text {
+            display: none;
+            position: fixed;
+            top: calc(50% + 50px);
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            color: #333;
+            z-index: 9999;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Subir imagen para predicción</h1>
+
+    <form id="predict-form" method="POST" action="/predict-web" enctype="multipart/form-data">
+        <label for="class_ids">IDs de clase (ej: 1,2,3). En esta demo solo el admintod es el 1:</label>
+        <input type="text" name="class_ids" id="class_ids" required>
+
+        <label for="image">Imagen:</label>
+        <div id="drop-area">
+            <p>Arrastra y suelta una imagen aquí, o haz clic para seleccionarla</p>
+        </div>
+        <input type="file" name="image" id="image" accept="image/*" required style="display:none;">
+
+        <button type="submit">Enviar</button>
+    </form>
+
+    {% if result %}
+        <div class="result">
+            <strong>Resultado:</strong>
+            <pre>{{ result }}</pre>
+        </div>
+        <form method="GET" action="/predict-web" style="display:inline;">
+            <button type="submit" style="background-color: #999; margin-top: 1rem;">Nuevo</button>
+        </form>
+    {% endif %}
+
+    {% if img_data %}
+        <div class="image-gallery">
+            <div class="image-box">
+                <h3>Imagen original</h3>
+                <img src="data:image/png;base64,{{ img_data.original }}" alt="Imagen original">
+                <div class="download">
+                    <a download="original.png" href="data:image/png;base64,{{ img_data.original }}">
+                        <button type="button">Descargar</button>
+                    </a>
+                </div>
+            </div>
+            <div class="image-box">
+                <h3>Máscara de clase</h3>
+                <img src="data:image/png;base64,{{ img_data.mask }}" alt="Máscara">
+                <div class="download">
+                    <a download="mascara_clase.png" href="data:image/png;base64,{{ img_data.mask }}">
+                        <button type="button">Descargar</button>
+                    </a>
+                </div>
+            </div>
+            <div class="image-box">
+                <h3>Overlay resaltado</h3>
+                <img src="data:image/png;base64,{{ img_data.overlay }}" alt="Overlay">
+                <div class="download">
+                    <a download="resultado_overlay.png" href="data:image/png;base64,{{ img_data.overlay }}">
+                        <button type="button">Descargar</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="overlay" id="overlay"></div>
+    <div class="loader" id="loader"></div>
+    <div class="loader-text" id="loader-text">Procesando imagen...</div>
+
+    <script>
+        const form = document.getElementById('predict-form');
+        const overlay = document.getElementById('overlay');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loader-text');
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('image');
+
+        form.addEventListener('submit', function () {
+            overlay.style.display = 'block';
+            loader.style.display = 'block';
+            loaderText.style.display = 'block';
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.location.method !== 'POST') {
+                document.getElementById('class_ids').value = '';
+                document.getElementById('image').value = '';
+            }
+        });
+
+        dropArea.addEventListener('click', () => fileInput.click());
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.remove('dragover');
+            }, false);
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+            }
+        });
+    </script>
+</body>
+</html>

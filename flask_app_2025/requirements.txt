@@ -1,0 +1,13 @@
+Flask==3.0.3
+sqlmodel==0.0.24
+SQLAlchemy==2.0.39
+psycopg2-binary==2.9.5
+flask-smorest==0.44.0
+pyzmq==23.2.1
+tensorflow==2.10.1
+opencv-python==4.5.5.64
+pycocotools
+protobuf==3.19.6
+azure-storage-blob==12.21.0
+piexif
+flask-cors==3.0.3
