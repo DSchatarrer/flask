@@ -1,0 +1,31 @@
+{
+  "source_zip": "flask-estructura-fastapi-tipado-corregido.zip",
+  "original_source_files": 42,
+  "unchanged_files": 22,
+  "converted_files": 20,
+  "removed_source_files": [],
+  "source_sha256": "9438c84f5b9de50b32d7ed2ef4a6f8e7eef019a809786e90a069429250d88045",
+  "converted_files_list": [
+    ".env.example",
+    "migrations/env.py",
+    "README.md",
+    "requirements-dev.txt",
+    "requirements.txt",
+    "src/applications/home/router.py",
+    "src/applications/login/controller.py",
+    "src/applications/login/router.py",
+    "src/applications/users/router.py",
+    "src/core/commands.py",
+    "src/core/manager_db.py",
+    "src/core/security.py",
+    "src/core/session_cleanup.py",
+    "src/core/settings.py",
+    "tests/conftest.py",
+    "tests/test_admin_cli.py",
+    "tests/test_auth.py",
+    "tests/test_database.py",
+    "validation/test_architecture_standalone.py",
+    "validation/test_sqlalchemy_standalone.py"
+  ],
+  "verification": "17 validation tests passed; Flask HTTP integration not runnable without external dependencies"
+}
